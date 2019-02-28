@@ -12,17 +12,6 @@ class MouseTestPage extends StatefulWidget {
 }
 
 class _MouseTestPageState extends State<MouseTestPage> {
-  final List<String> _messages = [];
-  final List<Widget> _droppedWidgets = [Text('foobar')];
-
-  final FocusNode _focusNode = FocusNode();
-
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    FocusScope.of(context).requestFocus(_focusNode);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,45 +51,7 @@ class _MouseTestPageState extends State<MouseTestPage> {
           Expanded(
             child: Container(
               decoration: const BoxDecoration(color: Colors.green),
-              child: DragTarget(
-                builder: (context, List<String> candidateData, rejectedData) {
-                  return Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: _droppedWidgets
-                    ),
-                  );
-                },
-                onWillAccept: (data) {
-                  // setState(() {
-                    
-                  // });
-                  return true;
-                },
-                onAccept: (data) {
-                  print('onAccept $data');
-                  if (data == 'text') {
-                    setState(() {
-                      _droppedWidgets.add(Text('some default text'));
-                    });
-                  }
-                  else if (data == 'raised-button') {
-                    setState(() {
-                      _droppedWidgets.add(
-                        RaisedButton(
-                          onPressed: () {},
-                          child: Text('Default Text')
-                        )
-                      );
-                    });
-                  }
-                  else {
-                    throw Exception('unexpected data');
-                  }
-                },
-              )
+              child: Canvas()
             ),
             flex: 2,
           ),
@@ -114,6 +65,69 @@ class _MouseTestPageState extends State<MouseTestPage> {
         ],
       ),
     );
+  }
+}
+
+class Canvas extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _CanvasState();
+  }
+}
+
+class _CanvasState extends State<Canvas> {
+  final List<Widget> _droppedWidgets = [];
+  Color targetColor = Colors.transparent;
+
+  @override
+  Widget build(BuildContext context) {
+    return DragTarget(
+            builder: (context, List<String> candidateData, rejectedData) {
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: targetColor,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: _droppedWidgets
+                ),
+              );
+            },
+            onWillAccept: (data) {
+              setState(() {
+                targetColor = Colors.lightGreen;
+              });
+              return true;
+            },
+            onLeave: (data) {
+              setState(() {
+                targetColor = Colors.transparent;
+              });
+            },
+            onAccept: (data) {
+              print('onAccept $data');
+              if (data == 'text') {
+                setState(() {
+                  _droppedWidgets.add(Text('some default text'));
+                  targetColor = Colors.transparent;
+                });
+              }
+              else if (data == 'raised-button') {
+                setState(() {
+                  _droppedWidgets.add(
+                    RaisedButton(
+                      onPressed: () {},
+                      child: Text('Default Text')
+                    )
+                  );
+                  targetColor = Colors.transparent;
+                });
+              }
+              else {
+                throw Exception('unexpected data');
+              }
+            },
+          );
   }
 }
 
@@ -158,3 +172,5 @@ class FooBarButton extends StatelessWidget {
     );
   }
 }
+
+
