@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 
 import 'package:color_panel/color_panel.dart';
 import 'package:example_flutter/keyboard_test_page.dart';
+import 'package:example_flutter/mouse_test_page.dart';
 import 'package:file_chooser/file_chooser.dart' as file_chooser;
 import 'package:menubar/menubar.dart';
 
@@ -188,6 +189,12 @@ class _MyHomePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(new MaterialPageRoute(
                       builder: (context) => KeyboardTestPage()));
+                }),
+            new RaisedButton(
+                child: new Text('Test raw mouse events'),
+                onPressed: () {
+                  Navigator.of(context).push(new MaterialPageRoute(
+                      builder: (context) => MouseTestPage()));
                 })
           ],
         ),
