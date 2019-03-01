@@ -31,13 +31,13 @@ class _MouseTestPageState extends State<MouseTestPage> {
                 children: <Widget>[
                   Draggable(
                     child: CatalogText(),
-                    feedback: DefaultText(),
+                    feedback: BfDefaultText(),
                     childWhenDragging: CatalogText(),
                     data: 'text',
                   ),
                   Draggable(
                     child: CatalogRaisedButton(),
-                    feedback: DefaultRaisedButton(),
+                    feedback: BfDefaultRaisedButton(),
                     childWhenDragging: CatalogRaisedButton(),
                     data: 'raised-button',
                   ),
@@ -67,8 +67,16 @@ class _MouseTestPageState extends State<MouseTestPage> {
   }
 }
 
+class EditedProperty {
+  const EditedProperty({this.propertyKey, this.propertyValue});
+  final String propertyKey;
+  final String propertyValue;
+}
+
 // Widget activeCanvasWidget;
 ValueNotifier<Widget> activeCanvasWidget = ValueNotifier(null);
+int activeCanvasWidgetId = -1;
+ValueNotifier<EditedProperty> editedProperty = ValueNotifier(null);
 
 class PropertyTab extends StatefulWidget {
   @override
@@ -92,10 +100,80 @@ class _PropertyTabState extends State<PropertyTab> {
       return Text('select something on the canvas');
     }
     else {
-      return Text(activeCanvasWidget.value.runtimeType.toString());  
+      // return Text(activeCanvasWidget.value.runtimeType.toString());
+      final activeWidget = activeCanvasWidget.value;
+      final properties = <Widget>[];
+
+      final textController = TextEditingController();
+      final verticalPaddingController = TextEditingController();
+      final horizontalPaddingController = TextEditingController();
+
+      if (activeWidget is BfDefaultText) {
+        textController.text = activeWidget.data;
+        properties.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Text:'),
+              TextField(
+                controller: textController,
+                onChanged: (value) {
+                  editedProperty.value = EditedProperty(
+                    propertyKey: 'text',
+                    propertyValue: value
+                  );
+                },
+              ),
+            ],
+          )
+        );
+      }
+
+      if (activeWidget is BfDefaultRaisedButton) {
+        verticalPaddingController.text = (activeWidget.padding.vertical/2).toString();
+        properties.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Vertical Padding:'),
+              TextField(controller: verticalPaddingController),
+            ],
+          )
+        );
+
+        horizontalPaddingController.text = (activeWidget.padding.horizontal/2).toString();
+        properties.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Horizontal Padding:'),
+              TextField(controller: horizontalPaddingController),
+            ],
+          )
+        );
+      }
+
+      return Container(
+        // width: double.infinity,
+        // height: double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              child: Text('Widget type: ${activeWidget.runtimeType.toString()}')),
+            Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: properties
+              )
+            )
+          ],
+        ),
+      );
     }
   }
 }
+
 
 class Canvas extends StatefulWidget {
   @override
@@ -105,8 +183,36 @@ class Canvas extends StatefulWidget {
 }
 
 class _CanvasState extends State<Canvas> {
-  final List<Widget> _droppedWidgets = [];
+  final List<CanvasWidget> _droppedWidgets = [];
   Color targetColor = Colors.transparent;
+
+  @override
+  void initState() {
+    super.initState();
+    editedProperty.addListener(didEditedPropertyChange);
+  }
+  
+  void didEditedPropertyChange() {
+    print('didEditedPropertyChange');
+    setState(() {
+      print('activeCanvasWidgetId $activeCanvasWidgetId');
+      if (activeCanvasWidgetId > -1) {
+        final editedWidget =_droppedWidgets[activeCanvasWidgetId];
+        print('editedWidget ${editedWidget.id}');
+        if (editedWidget.child is BfDefaultText) {
+          if (editedProperty.value.propertyKey == 'text') {
+            print('setting property $activeCanvasWidgetId ${editedProperty.value.propertyKey} ${editedProperty.value.propertyValue}');
+            _droppedWidgets[activeCanvasWidgetId] = CanvasWidget(
+              id: activeCanvasWidgetId,
+              child: BfDefaultText(
+                text:editedProperty.value.propertyValue
+              )
+            );
+          }
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,16 +240,17 @@ class _CanvasState extends State<Canvas> {
               });
             },
             onAccept: (data) {
+              final widgetId =_droppedWidgets.length;
               print('onAccept $data');
               if (data == 'text') {
                 setState(() {
-                  _droppedWidgets.add(CanvasWidget(child: DefaultText()));
+                  _droppedWidgets.add(CanvasWidget(id: widgetId, child: BfDefaultText()));
                   targetColor = Colors.transparent;
                 });
               }
               else if (data == 'raised-button') {
                 setState(() {
-                  _droppedWidgets.add(CanvasWidget(child: DefaultRaisedButton()));
+                  _droppedWidgets.add(CanvasWidget(id: widgetId, child: BfDefaultRaisedButton(id: widgetId)));
                   targetColor = Colors.transparent;
                 });
               }
@@ -156,14 +263,16 @@ class _CanvasState extends State<Canvas> {
 }
 
 class CanvasWidget extends StatelessWidget {
-  const CanvasWidget({this.child});
+  const CanvasWidget({this.id, this.child});
+  final int id;
   final Widget child;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       child: child,
       onTap: () {
-        print('clicked ${child.runtimeType.toString()}');
+        print('clicked ${child.runtimeType.toString()} $id');
+        activeCanvasWidgetId = id;
         activeCanvasWidget.value = child;
       });
   }
@@ -182,8 +291,8 @@ class CatalogWidget extends StatelessWidget {
   }
 }
 
-class DefaultText extends Text {
-  const DefaultText() : super('Abc', style: defaultTextStyle);
+class BfDefaultText extends Text {
+  const BfDefaultText({String text}) : super(text ?? 'Abc', style: defaultTextStyle);
   static const defaultTextStyle = TextStyle(
     fontWeight: FontWeight.bold, 
     fontSize: 14,
@@ -196,19 +305,30 @@ class CatalogText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CatalogWidget(
-      child: DefaultText()
+      child: BfDefaultText()
     ); 
   }
 }
 
-class DefaultRaisedButton extends RaisedButton {
+class BfDefaultRaisedButton extends StatelessWidget {
+
+  const BfDefaultRaisedButton({this.id});
+
+  final int id;
+
+  EdgeInsetsGeometry get padding {
+    return EdgeInsets.symmetric(horizontal: 20, vertical: 10);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RaisedButton(
       onPressed: () {
-        print('clicked DefaultRaisedButton');
+        print('clicked DefaultRaisedButton $id');
+        activeCanvasWidgetId = id;
         activeCanvasWidget.value = this;
       },
+      padding: padding,
       child: Text('Button')
     );
   }
@@ -218,7 +338,7 @@ class CatalogRaisedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CatalogWidget(
-      child: DefaultRaisedButton()
+      child: BfDefaultRaisedButton()
     );
   }
 }
