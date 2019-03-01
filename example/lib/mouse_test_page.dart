@@ -32,35 +32,35 @@ class _MouseTestPageState extends State<MouseTestPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   Draggable(
-                    child: FooBarText(),
-                    feedback: FooBarText(),
-                    childWhenDragging: FooBarText(),
+                    child: CatalogText(),
+                    feedback: CatalogText(),
+                    childWhenDragging: CatalogText(),
                     data: 'text',
                   ),
                   Draggable(
-                    child: FooBarButton(),
-                    feedback: FooBarButton(),
-                    childWhenDragging: FooBarButton(),
+                    child: CatalogRaisedButton(),
+                    feedback: CatalogRaisedButton(),
+                    childWhenDragging: CatalogRaisedButton(),
                     data: 'raised-button',
                   ),
                 ],
               ),
             ),
-            flex: 3,
+            flex: 1,
           ),
           Expanded(
             child: Container(
               decoration: const BoxDecoration(color: Colors.green),
               child: Canvas()
             ),
-            flex: 2,
+            flex: 3,
           ),
           Expanded(
             child: Container(
               decoration: const BoxDecoration(color: Colors.blue),
-              // @TODO: show callbacks on screen onDragStarted, etc.
+              // @TODO: do rough properties tab? the clean it up a bit for monday's demo
             ),
-            flex: 1,
+            flex: 2,
           ),
         ],
       ),
@@ -131,9 +131,9 @@ class _CanvasState extends State<Canvas> {
   }
 }
 
-class FooBar extends StatelessWidget {
+class CatalogWidgetContainer extends StatelessWidget {
+  const CatalogWidgetContainer({this.child});
   final Widget child;
-  const FooBar({this.child});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -144,10 +144,20 @@ class FooBar extends StatelessWidget {
   }
 }
 
-class FooBarText extends StatelessWidget {
+class DefaultText extends Text {
+  const DefaultText() : super('Abc', style: defaultTextStyle);
+  static const defaultTextStyle = TextStyle(
+    fontWeight: FontWeight.bold, 
+    fontSize: 14,
+    color: Colors.black,
+    decoration: TextDecoration.none
+  );
+}
+
+class CatalogText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return FooBar(
+    return CatalogWidgetContainer(
       child: Text(
         'Text',
         style: TextStyle(
@@ -161,10 +171,11 @@ class FooBarText extends StatelessWidget {
   }
 }
 
-class FooBarButton extends StatelessWidget {
+
+class CatalogRaisedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return FooBar(
+    return CatalogWidgetContainer(
       child: RaisedButton(
         onPressed: () {},
         child: Text('RaisedButton')
