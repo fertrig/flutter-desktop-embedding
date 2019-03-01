@@ -1,7 +1,5 @@
 // Author: fertrig
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 
 /// Mouse test page for the example application.
 class MouseTestPage extends StatefulWidget {
@@ -33,13 +31,13 @@ class _MouseTestPageState extends State<MouseTestPage> {
                 children: <Widget>[
                   Draggable(
                     child: CatalogText(),
-                    feedback: CatalogText(),
+                    feedback: DefaultText(),
                     childWhenDragging: CatalogText(),
                     data: 'text',
                   ),
                   Draggable(
                     child: CatalogRaisedButton(),
-                    feedback: CatalogRaisedButton(),
+                    feedback: DefaultRaisedButton(),
                     childWhenDragging: CatalogRaisedButton(),
                     data: 'raised-button',
                   ),
@@ -59,12 +57,43 @@ class _MouseTestPageState extends State<MouseTestPage> {
             child: Container(
               decoration: const BoxDecoration(color: Colors.blue),
               // @TODO: do rough properties tab? the clean it up a bit for monday's demo
+              child: PropertyTab()
             ),
             flex: 2,
           ),
         ],
       ),
     );
+  }
+}
+
+// Widget activeCanvasWidget;
+ValueNotifier<Widget> activeCanvasWidget = ValueNotifier(null);
+
+class PropertyTab extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _PropertyTabState();
+  }
+}
+
+class _PropertyTabState extends State<PropertyTab> {
+  @override
+  void initState() {
+    super.initState();
+    activeCanvasWidget.addListener(didActiveCanvasWidgetChange);
+  }
+  
+  void didActiveCanvasWidgetChange() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    if (activeCanvasWidget.value == null) {
+      return Text('select something on the canvas');
+    }
+    else {
+      return Text(activeCanvasWidget.value.runtimeType.toString());  
+    }
   }
 }
 
@@ -108,18 +137,13 @@ class _CanvasState extends State<Canvas> {
               print('onAccept $data');
               if (data == 'text') {
                 setState(() {
-                  _droppedWidgets.add(Text('some default text'));
+                  _droppedWidgets.add(CanvasWidget(child: DefaultText()));
                   targetColor = Colors.transparent;
                 });
               }
               else if (data == 'raised-button') {
                 setState(() {
-                  _droppedWidgets.add(
-                    RaisedButton(
-                      onPressed: () {},
-                      child: Text('Default Text')
-                    )
-                  );
+                  _droppedWidgets.add(CanvasWidget(child: DefaultRaisedButton()));
                   targetColor = Colors.transparent;
                 });
               }
@@ -131,8 +155,22 @@ class _CanvasState extends State<Canvas> {
   }
 }
 
-class CatalogWidgetContainer extends StatelessWidget {
-  const CatalogWidgetContainer({this.child});
+class CanvasWidget extends StatelessWidget {
+  const CanvasWidget({this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: child,
+      onTap: () {
+        print('clicked ${child.runtimeType.toString()}');
+        activeCanvasWidget.value = child;
+      });
+  }
+}
+
+class CatalogWidget extends StatelessWidget {
+  const CatalogWidget({this.child});
   final Widget child;
   @override
   Widget build(BuildContext context) {
@@ -157,29 +195,30 @@ class DefaultText extends Text {
 class CatalogText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CatalogWidgetContainer(
-      child: Text(
-        'Text',
-        style: TextStyle(
-          fontWeight: FontWeight.bold, 
-          fontSize: 14,
-          color: Colors.black,
-          decoration: TextDecoration.none
-        ),
-      )
+    return CatalogWidget(
+      child: DefaultText()
     ); 
   }
 }
 
+class DefaultRaisedButton extends RaisedButton {
+  @override
+  Widget build(BuildContext context) {
+    return RaisedButton(
+      onPressed: () {
+        print('clicked DefaultRaisedButton');
+        activeCanvasWidget.value = this;
+      },
+      child: Text('Button')
+    );
+  }
+}
 
 class CatalogRaisedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CatalogWidgetContainer(
-      child: RaisedButton(
-        onPressed: () {},
-        child: Text('RaisedButton')
-      )
+    return CatalogWidget(
+      child: DefaultRaisedButton()
     );
   }
 }
