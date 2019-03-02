@@ -1,5 +1,7 @@
 // Author: fertrig
+import 'dart:mirrors';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 /// Mouse test page for the example application.
 class MouseTestPage extends StatefulWidget {
@@ -55,7 +57,7 @@ class _MouseTestPageState extends State<MouseTestPage> {
           ),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(color: Colors.blue),
+              decoration: const BoxDecoration(color: Colors.transparent),
               // @TODO: do rough properties tab? the clean it up a bit for monday's demo
               child: PropertyTab()
             ),
@@ -108,14 +110,17 @@ class _PropertyTabState extends State<PropertyTab> {
       final verticalPaddingController = TextEditingController();
       final horizontalPaddingController = TextEditingController();
 
+      var widgetDisplayName = '';
+
       if (activeWidget is BfDefaultText) {
+        widgetDisplayName = BfDefaultText.displayName;
         textController.text = activeWidget.data;
         properties.add(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text('Text:'),
-              TextField(
+              CupertinoTextField(
                 controller: textController,
                 onChanged: (value) {
                   editedProperty.value = EditedProperty(
@@ -127,16 +132,27 @@ class _PropertyTabState extends State<PropertyTab> {
             ],
           )
         );
+
+
       }
 
       if (activeWidget is BfDefaultRaisedButton) {
+        widgetDisplayName = BfDefaultRaisedButton.displayName;
         verticalPaddingController.text = (activeWidget.padding.vertical/2).toString();
         properties.add(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text('Vertical Padding:'),
-              TextField(controller: verticalPaddingController),
+              CupertinoTextField(
+                controller: verticalPaddingController,
+                onChanged: (value) {
+                  editedProperty.value = EditedProperty(
+                    propertyKey: 'vertical-padding',
+                    propertyValue: value
+                  );
+                },
+              ),
             ],
           )
         );
@@ -147,7 +163,15 @@ class _PropertyTabState extends State<PropertyTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text('Horizontal Padding:'),
-              TextField(controller: horizontalPaddingController),
+              CupertinoTextField(
+                controller: horizontalPaddingController,
+                onChanged: (value) {
+                  editedProperty.value = EditedProperty(
+                    propertyKey: 'horizontal-padding',
+                    propertyValue: value
+                  );
+                },
+              ),
             ],
           )
         );
@@ -156,18 +180,33 @@ class _PropertyTabState extends State<PropertyTab> {
       return Container(
         // width: double.infinity,
         // height: double.infinity,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              child: Text('Widget type: ${activeWidget.runtimeType.toString()}')),
-            Container(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: properties
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    widgetDisplayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 18,
+                      color: Colors.black,
+                      decoration: TextDecoration.underline
+                    ),
+                  ),
+                )
+              ),
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: properties.map((x) => Padding(padding: const EdgeInsets.all(8.0), child: x)).toList()
+                )
               )
-            )
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -193,19 +232,38 @@ class _CanvasState extends State<Canvas> {
   }
   
   void didEditedPropertyChange() {
-    print('didEditedPropertyChange');
     setState(() {
-      print('activeCanvasWidgetId $activeCanvasWidgetId');
       if (activeCanvasWidgetId > -1) {
         final editedWidget =_droppedWidgets[activeCanvasWidgetId];
-        print('editedWidget ${editedWidget.id}');
-        if (editedWidget.child is BfDefaultText) {
+        final bfDefaultWidget =editedWidget.child;
+        if (bfDefaultWidget is BfDefaultText) {
           if (editedProperty.value.propertyKey == 'text') {
-            print('setting property $activeCanvasWidgetId ${editedProperty.value.propertyKey} ${editedProperty.value.propertyValue}');
             _droppedWidgets[activeCanvasWidgetId] = CanvasWidget(
               id: activeCanvasWidgetId,
               child: BfDefaultText(
-                text:editedProperty.value.propertyValue
+                text: editedProperty.value.propertyValue
+              )
+            );
+          }
+        }
+        if (bfDefaultWidget is BfDefaultRaisedButton) {
+          if (editedProperty.value.propertyKey == 'vertical-padding') {
+            _droppedWidgets[activeCanvasWidgetId] = CanvasWidget(
+              id: activeCanvasWidgetId,
+              child:BfDefaultRaisedButton(
+                id: activeCanvasWidgetId,
+                verticalPadding: double.parse(editedProperty.value.propertyValue),
+                horizontalPadding: bfDefaultWidget.horizontalPadding,
+              )
+            );
+          }
+          if (editedProperty.value.propertyKey == 'horizontal-padding') {
+            _droppedWidgets[activeCanvasWidgetId] = CanvasWidget(
+              id: activeCanvasWidgetId,
+              child:BfDefaultRaisedButton(
+                id: activeCanvasWidgetId,
+                horizontalPadding: double.parse(editedProperty.value.propertyValue),
+                verticalPadding: bfDefaultWidget.verticalPadding,
               )
             );
           }
@@ -299,6 +357,7 @@ class BfDefaultText extends Text {
     color: Colors.black,
     decoration: TextDecoration.none
   );
+  static const displayName = 'Text';
 }
 
 class CatalogText extends StatelessWidget {
@@ -312,12 +371,20 @@ class CatalogText extends StatelessWidget {
 
 class BfDefaultRaisedButton extends StatelessWidget {
 
-  const BfDefaultRaisedButton({this.id});
+  const BfDefaultRaisedButton({
+    this.id, 
+    this.verticalPadding = 10, 
+    this.horizontalPadding = 20 
+  });
 
   final int id;
+  final double verticalPadding;
+  final double horizontalPadding;
+
+  static const displayName = 'RaisedButton';
 
   EdgeInsetsGeometry get padding {
-    return EdgeInsets.symmetric(horizontal: 20, vertical: 10);
+    return EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding);
   }
 
   @override
