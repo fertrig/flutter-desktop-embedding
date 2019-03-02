@@ -1,5 +1,4 @@
 // Author: fertrig
-import 'dart:mirrors';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -119,7 +118,7 @@ class _PropertyTabState extends State<PropertyTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Text:'),
+              Text('data:'),
               CupertinoTextField(
                 controller: textController,
                 onChanged: (value) {
@@ -133,7 +132,19 @@ class _PropertyTabState extends State<PropertyTab> {
           )
         );
 
+        const widgetTextProperties = ['style',
+          'textAlign',
+          'textDirection',
+          'locale',
+          'softWrap',
+          'overflow',
+          'textScaleFactor',
+          'maxLines'];
 
+        properties.addAll(widgetTextProperties.map((x) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start, 
+          children: [Text('$x:'), Text('...')]))
+        );
       }
 
       if (activeWidget is BfDefaultRaisedButton) {
@@ -143,7 +154,7 @@ class _PropertyTabState extends State<PropertyTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Vertical Padding:'),
+              Text('verticalPadding:'),
               CupertinoTextField(
                 controller: verticalPaddingController,
                 onChanged: (value) {
@@ -162,7 +173,7 @@ class _PropertyTabState extends State<PropertyTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Horizontal Padding:'),
+              Text('horizontalPadding:'),
               CupertinoTextField(
                 controller: horizontalPaddingController,
                 onChanged: (value) {
@@ -174,6 +185,23 @@ class _PropertyTabState extends State<PropertyTab> {
               ),
             ],
           )
+        );
+
+        const widgetRaisedButtonProperties = [
+          'onPressed',
+          'onHighlightChanged',
+          'textTheme',
+          'textColor',
+          'disabledTextColor',
+          'color',
+          'disabledColor',
+          'highlightColor',
+          'splashColor'
+        ];
+
+        properties.addAll(widgetRaisedButtonProperties.map((x) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start, 
+          children: [Text('$x:'), Text('...')]))
         );
       }
 
@@ -202,6 +230,7 @@ class _PropertyTabState extends State<PropertyTab> {
               Container(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: properties.map((x) => Padding(padding: const EdgeInsets.all(8.0), child: x)).toList()
                 )
               )
