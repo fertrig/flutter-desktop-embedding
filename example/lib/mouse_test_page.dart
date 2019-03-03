@@ -16,7 +16,7 @@ class _MouseTestPageState extends State<MouseTestPage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: AppBar(
-          title: new Text('Mouse events test'),
+          title: new Text('Butterfree v0.0.1'),
           leading: new IconButton(
               icon: new Icon(Icons.arrow_back),
               onPressed: () {
@@ -26,9 +26,10 @@ class _MouseTestPageState extends State<MouseTestPage> {
         children: <Widget>[
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(color: Colors.red),
+              decoration: const BoxDecoration(color: Colors.transparent),
+              padding: EdgeInsets.all(5),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Draggable(
                     child: CatalogText(),
@@ -36,12 +37,21 @@ class _MouseTestPageState extends State<MouseTestPage> {
                     childWhenDragging: CatalogText(),
                     data: 'text',
                   ),
+                  Container(height: 25),
                   Draggable(
                     child: CatalogRaisedButton(),
                     feedback: BfDefaultRaisedButton(),
                     childWhenDragging: CatalogRaisedButton(),
                     data: 'raised-button',
                   ),
+                  Container(height: 25),
+                  // Draggable(
+                  //   child: CatalogTextField(),
+                  //   feedback: BfDefaultTextField(),
+                  //   childWhenDragging: CatalogTextField(),
+                  //   data: 'text-field'
+                  // )
+                  CatalogTextField()
                 ],
               ),
             ),
@@ -57,7 +67,6 @@ class _MouseTestPageState extends State<MouseTestPage> {
           Expanded(
             child: Container(
               decoration: const BoxDecoration(color: Colors.transparent),
-              // @TODO: do rough properties tab? the clean it up a bit for monday's demo
               child: PropertyTab()
             ),
             flex: 2,
@@ -187,8 +196,18 @@ class _PropertyTabState extends State<PropertyTab> {
           )
         );
 
+        properties.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('onPressed:'),
+              CupertinoTextField(),
+            ],
+          )
+        );
+
         const widgetRaisedButtonProperties = [
-          'onPressed',
           'onHighlightChanged',
           'textTheme',
           'textColor',
@@ -366,14 +385,30 @@ class CanvasWidget extends StatelessWidget {
 }
 
 class CatalogWidget extends StatelessWidget {
-  const CatalogWidget({this.child});
+  const CatalogWidget({this.child, this.displayName});
   final Widget child;
+  final String displayName;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      color: Colors.yellowAccent,
-      child: child
+    return Column(
+      children: <Widget>[
+        Container(
+          // height: 70,
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          color: Colors.lightBlueAccent,
+          child: child
+        ),
+        Text(
+          displayName,
+          style: TextStyle(
+            fontWeight: FontWeight.bold, 
+            fontSize: 14,
+            color: Colors.black,
+            decoration: TextDecoration.underline
+          ),
+        )
+      ],
     );  
   }
 }
@@ -393,7 +428,8 @@ class CatalogText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CatalogWidget(
-      child: BfDefaultText()
+      child: BfDefaultText(),
+      displayName: 'Text',
     ); 
   }
 }
@@ -434,8 +470,34 @@ class CatalogRaisedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CatalogWidget(
-      child: BfDefaultRaisedButton()
+      child: BfDefaultRaisedButton(),
+      displayName: 'RaisedButton',
     );
+  }
+}
+
+class BfDefaultTextField extends StatelessWidget {
+  // const BfDefaultTextField({String text}) : super(text ?? 'Abc', style: defaultTextStyle);
+  // static const defaultTextStyle = TextStyle(
+  //   fontWeight: FontWeight.bold, 
+  //   fontSize: 14,
+  //   color: Colors.black,
+  //   decoration: TextDecoration.none
+  // );
+  // static const displayName = 'Text';
+  @override
+  Widget build(BuildContext context) {
+    return TextField();
+  }
+}
+
+class CatalogTextField extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CatalogWidget(
+      child: BfDefaultTextField(),
+      displayName: 'TextField',
+    ); 
   }
 }
 
